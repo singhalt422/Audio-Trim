@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Audio Trimmer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fa;
+      display: flex;
+      justify-content: center;
+      padding-top: 50px;
+    }
+    .container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 500px;
+    }
+    h2 {
+      text-align: center;
+    }
+    label {
+      margin-top: 15px;
+      display: block;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    audio {
+      width: 100%;
+      margin-top: 15px;
+    }
+    #downloadLink {
+      display: inline-block;
+      margin-top: 15px;
+      background-color: #28a745;
+      color: white;
+      padding: 10px;
+      text-decoration: none;
+      border-radius: 5px;
+    }
+    #downloadLink:hover {
+      background-color: #218838;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Upload & Trim Audio</h2>
+    <form id="uploadForm">
+      <label>Select Audio File:</label>
+      <input type="file" id="audioFile" name="audio" required>
+      <label>Start Time (HH:MM:SS.s):</label>
+      <input type="text" id="start" value="00:00:00.0" required>
+      <label>End Time (HH:MM:SS.s):</label>
+      <input type="text" id="end" value="00:00:10.0" required>
+      <button type="submit">Upload & Trim</button>
+    </form>
+    <div id="playerSection" style="display:none;">
+      <h3>Trimmed Audio Preview:</h3>
+      <audio id="audioPlayer" controls></audio>
+      <a id="downloadLink" download>Download Trimmed Audio</a>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('uploadForm');
+    const playerSection = document.getElementById('playerSection');
+    const audioPlayer = document.getElementById('audioPlayer');
+    const downloadLink = document.getElementById('downloadLink');
+
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const formData = new FormData();
+      formData.append('audio', document.getElementById('audioFile').files[0]);
+      formData.append('start', document.getElementById('start').value);
+      formData.append('end', document.getElementById('end').value);
+
+      const res = await fetch('/trim', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await res.json();
+      if (data.error) {
+        alert(data.error);
+        return;
+      }
+
+      audioPlayer.src = data.trimmed;
+      downloadLink.href = data.trimmed;
+      playerSection.style.display = 'block';
+    };
+  </script>
+</body>
+</html>
