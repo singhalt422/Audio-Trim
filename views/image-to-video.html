@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Image to Video</title>
+</head>
+<body>
+  <h1>Convert Image to Video</h1>
+  <form action="/image-to-video" method="POST" enctype="multipart/form-data">
+    <label>Select Image:</label><br/>
+    <input type="file" name="image" accept="image/*" required /><br/><br/>
+
+    <label>Video Duration (in seconds):</label><br/>
+    <input type="number" name="duration" min="1" required /><br/><br/>
+
+    <button type="submit">Create Video</button>
+  </form>
+</body>
+</html>

@@ -19,7 +19,12 @@ app.use('/public', express.static(path.join(__dirname, 'public')));
 
 // Routes
 const audioRoutes = require('./routes/audioRoutes');
+const videoRoutes = require('./routes/videoRoutes'); // line 21
+const mergeRoutes = require('./routes/mergeRoutes'); // <- Add this line
 app.use('/', audioRoutes);
+app.use('/image-to-video', videoRoutes); // line 22
+app.use('/merge-audio-video', mergeRoutes); // <- Add this line
+
 
 // Start server
 app.listen(PORT, () => {
