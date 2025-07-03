@@ -8,6 +8,7 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 8000;
 
+// Set ffmpeg path
 ffmpeg.setFfmpegPath(ffmpegPath);
 
 // Middleware
@@ -16,8 +17,22 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/trimmed', express.static(path.join(__dirname, 'trimmed')));
 
-// File upload configuration
-const upload = multer({ dest: 'uploads/' });
+// Ensure folders exist
+['uploads', 'trimmed'].forEach(dir => {
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir);
+});
+
+// Multer config – accepts any audio type
+const upload = multer({
+  dest: 'uploads/',
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('audio/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only audio files are allowed!'), false);
+    }
+  }
+});
 
 // HTML UI
 const html = `<!DOCTYPE html>
@@ -26,106 +41,80 @@ const html = `<!DOCTYPE html>
   <meta charset="UTF-8">
   <title>Audio Trimmer</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
     body {
       font-family: Arial, sans-serif;
       background: #f5f7fa;
-      margin: 0;
-      padding: 0;
       display: flex;
       justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
+      padding-top: 50px;
     }
 
     .container {
       background: #fff;
-      padding: 30px 40px;
-      margin-top: 50px;
+      padding: 30px;
+      border-radius: 10px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      border-radius: 8px;
-      max-width: 500px;
       width: 100%;
+      max-width: 500px;
     }
 
     h2 {
       text-align: center;
-      color: #333;
     }
 
     label {
+      margin-top: 15px;
       display: block;
-      margin: 15px 0 5px;
-      color: #444;
     }
 
-    input[type="text"],
-    input[type="file"] {
+    input, button {
       width: 100%;
       padding: 10px;
-      margin-top: 3px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      font-size: 1rem;
+      margin-top: 5px;
     }
 
     button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 20px;
-      background-color: #007BFF;
+      background-color: #007bff;
       color: white;
       border: none;
-      border-radius: 6px;
-      font-size: 1rem;
       cursor: pointer;
-      transition: background-color 0.3s ease;
     }
 
     button:hover {
       background-color: #0056b3;
     }
 
-    #playerSection {
-      margin-top: 30px;
-      text-align: center;
-    }
-
     audio {
       width: 100%;
-      margin-top: 10px;
+      margin-top: 15px;
     }
 
-    a#downloadLink {
+    #downloadLink {
       display: inline-block;
       margin-top: 15px;
-      padding: 10px 20px;
       background-color: #28a745;
       color: white;
+      padding: 10px;
       text-decoration: none;
-      border-radius: 4px;
-      transition: background-color 0.3s ease;
+      border-radius: 5px;
     }
 
-    a#downloadLink:hover {
+    #downloadLink:hover {
       background-color: #218838;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>Upload and Trim Audio</h2>
-    <form id="uploadForm" enctype="multipart/form-data">
-      <label for="audioFile">Select Audio File:</label>
-      <input type="file" name="audio" id="audioFile" accept="audio/*" required>
+    <h2>Upload & Trim Audio</h2>
+    <form id="uploadForm">
+      <label>Select Audio File:</label>
+      <input type="file" id="audioFile" name="audio" required>
 
-      <label for="start">Start Time (HH:MM:SS.s):</label>
+      <label>Start Time (HH:MM:SS.s):</label>
       <input type="text" id="start" value="00:00:00.0" required>
 
-      <label for="end">End Time (HH:MM:SS.s):</label>
+      <label>End Time (HH:MM:SS.s):</label>
       <input type="text" id="end" value="00:00:10.0" required>
 
       <button type="submit">Upload & Trim</button>
@@ -134,7 +123,7 @@ const html = `<!DOCTYPE html>
     <div id="playerSection" style="display:none;">
       <h3>Trimmed Audio Preview:</h3>
       <audio id="audioPlayer" controls></audio>
-      <a id="downloadLink" download style="display:none;">Download Trimmed Audio</a>
+      <a id="downloadLink" download>Download Trimmed Audio</a>
     </div>
   </div>
 
@@ -146,15 +135,10 @@ const html = `<!DOCTYPE html>
 
     form.onsubmit = async (e) => {
       e.preventDefault();
-
-      const fileInput = document.getElementById('audioFile');
-      const start = document.getElementById('start').value;
-      const end = document.getElementById('end').value;
-
       const formData = new FormData();
-      formData.append('audio', fileInput.files[0]);
-      formData.append('start', start);
-      formData.append('end', end);
+      formData.append('audio', document.getElementById('audioFile').files[0]);
+      formData.append('start', document.getElementById('start').value);
+      formData.append('end', document.getElementById('end').value);
 
       const res = await fetch('/trim', {
         method: 'POST',
@@ -169,8 +153,6 @@ const html = `<!DOCTYPE html>
 
       audioPlayer.src = data.trimmed;
       downloadLink.href = data.trimmed;
-      downloadLink.style.display = 'inline-block';
-      downloadLink.textContent = 'Download Trimmed Audio';
       playerSection.style.display = 'block';
     };
   </script>
@@ -182,13 +164,13 @@ app.get('/', (req, res) => {
   res.send(html);
 });
 
-// Trim audio route
+// POST /trim – handles audio trimming
 app.post('/trim', upload.single('audio'), (req, res) => {
   const { start, end } = req.body;
   const file = req.file;
 
   if (!file || !start || !end) {
-    return res.json({ error: 'Missing required data' });
+    return res.status(400).json({ error: 'Missing required fields.' });
   }
 
   const originalPath = path.join(__dirname, file.path);
@@ -196,53 +178,47 @@ app.post('/trim', upload.single('audio'), (req, res) => {
   const trimmedPath = path.join(__dirname, 'trimmed', `trimmed-${Date.now()}.mp3`);
 
   const duration = getDuration(start, end);
-  if (duration <= 0) return res.json({ error: 'End time must be after start time' });
+  if (duration <= 0) return res.json({ error: 'End time must be after start time.' });
 
-  // Step 1: Convert to high quality MP3
+  // Step 1: Convert input to high quality MP3
   ffmpeg(originalPath)
-    .outputOptions([
-      '-acodec libmp3lame',
-      '-b:a 320k',
-      '-ar 44100',
-      '-ac 2'
-    ])
+    .audioCodec('libmp3lame')
+    .audioBitrate('320k')
+    .audioChannels(2)
+    .audioFrequency(44100)
     .on('end', () => {
-      // Step 2: Trim the MP3
+      // Step 2: Trim MP3 using ffmpeg
       ffmpeg(convertedPath)
-        .inputOptions([`-ss ${start}`])
-        .outputOptions([`-t ${duration}`])
+        .setStartTime(start)
+        .duration(duration)
         .on('end', () => {
           res.json({ trimmed: `/trimmed/${path.basename(trimmedPath)}` });
 
+          // Cleanup temp files
           fs.unlink(originalPath, () => {});
           fs.unlink(convertedPath, () => {});
         })
         .on('error', err => {
           console.error('Trimming error:', err.message);
-          res.status(500).json({ error: 'Trimming failed' });
+          res.status(500).json({ error: 'Trimming failed.' });
         })
         .save(trimmedPath);
     })
     .on('error', err => {
       console.error('Conversion error:', err.message);
-      res.status(500).json({ error: 'Conversion failed' });
+      res.status(500).json({ error: 'Conversion failed.' });
     })
     .save(convertedPath);
 });
 
-// Time string to duration in seconds
+// Helper function: duration in seconds
 function getDuration(start, end) {
-  const toSeconds = (time) => {
-    const [h, m, s] = time.split(':');
-    return parseFloat(h) * 3600 + parseFloat(m) * 60 + parseFloat(s);
+  const toSeconds = (t) => {
+    const [h, m, s] = t.split(':');
+    return (+h) * 3600 + (+m) * 60 + parseFloat(s);
   };
   return +(toSeconds(end) - toSeconds(start)).toFixed(2);
 }
-
-// Ensure upload folders exist
-['uploads', 'trimmed'].forEach(dir => {
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir);
-});
 
 // Start server
 app.listen(PORT, () => {
