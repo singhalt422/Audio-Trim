@@ -1,13 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Audio Trimmer</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       margin: 0;
       background: #f5f7fa;
+    }
+
+    /* NAVBAR STYLES */
+    .navbar {
+      background-color: #2c3e50;
+      padding: 10px 30px;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      color: white;
+      gap: 20px;
+    }
+
+    .navbar a {
+      color: white;
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+    }
+
+    .navbar a:hover {
+      background-color: #34495e;
+    }
+
+    /* Manually highlight active link here (example: /audio-trimmer) */
+    .navbar a.active {
+      background-color: #007bff;
     }
 
     .container {
@@ -68,6 +96,13 @@
 </head>
 <body>
 
+  <!-- STATIC NAVBAR -->
+  <nav class="navbar">
+    <a href="/" class="">Home</a>
+    <a href="/image-to-video" class="">Image to Video</a>
+    <a href="/merge-audio-video" class="">Merge Audio & Video</a>
+  </nav>
+
   <div class="container">
     <h2>Upload & Trim Audio</h2>
     <form id="uploadForm">
@@ -120,5 +155,6 @@
       playerSection.style.display = 'block';
     };
   </script>
+
 </body>
 </html>

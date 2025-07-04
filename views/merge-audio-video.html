@@ -1,19 +1,116 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>Replace Video Audio</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f5f7fa;
+    }
+
+    /* NAVBAR STYLES */
+    .navbar {
+      background-color: #2c3e50;
+      padding: 10px 30px;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      color: white;
+      gap: 20px;
+    }
+
+    .navbar a {
+      color: white;
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+    }
+
+    .navbar a:hover {
+      background-color: #34495e;
+    }
+
+    /* Highlight active link - set the current page */
+    .navbar a.active {
+      background-color: #007bff;
+    }
+
+    /* Container for form */
+    .container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 500px;
+      margin: 50px auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+      color: #555;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+      box-sizing: border-box;
+    }
+
+    button {
+      margin-top: 25px;
+      width: 100%;
+      padding: 12px;
+      background-color: #007bff;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
 </head>
 <body>
-  <h1>Replace Video's Audio with Your Own</h1>
-  <form action="/merge-audio-video" method="POST" enctype="multipart/form-data">
-    <label>Upload Video File:</label><br/>
-    <input type="file" name="video" accept="video/*" required /><br/><br/>
 
-    <label>Upload Audio File:</label><br/>
-    <input type="file" name="audio" accept="audio/*" required /><br/><br/>
+  <!-- STATIC NAVBAR -->
+  <nav class="navbar">
+    <a href="/" >Home</a>
+    <a href="/image-to-video" >Image to Video</a>
+    <a href="/merge-audio-video" class="active">Merge Audio & Video</a>
+  </nav>
 
-    <button type="submit">Replace Audio</button>
-  </form>
+  <div class="container">
+    <h1>Replace Video's Audio with Your Own</h1>
+    <form action="/merge-audio-video" method="POST" enctype="multipart/form-data">
+      <label for="video">Upload Video File:</label>
+      <input type="file" id="video" name="video" accept="video/*" required />
+
+      <label for="audio">Upload Audio File:</label>
+      <input type="file" id="audio" name="audio" accept="audio/*" required />
+
+      <button type="submit">Replace Audio</button>
+    </form>
+  </div>
+
 </body>
 </html>
